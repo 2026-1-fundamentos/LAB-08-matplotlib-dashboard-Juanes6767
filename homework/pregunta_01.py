@@ -2,7 +2,13 @@
 """
 Escriba el codigo que ejecute la accion solicitada.
 """
+from pathlib import Path
 
+import matplotlib
+
+matplotlib.use("Agg")
+import matplotlib.pyplot as plt
+import pandas as pd
 
 def pregunta_01():
     """
