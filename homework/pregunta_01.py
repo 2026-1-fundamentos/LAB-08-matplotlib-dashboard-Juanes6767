@@ -2,15 +2,6 @@
 """
 Escriba el codigo que ejecute la accion solicitada.
 """
-from pathlib import Path
-
-import matplotlib
-
-matplotlib.use("Agg")
-import matplotlib.pyplot as plt
-import pandas as pd
-
-
 def pregunta_01():
     """
     El archivo `files//shipping-data.csv` contiene información sobre los envios
@@ -29,189 +20,119 @@ def pregunta_01():
     * Todos los archivos debe ser creados en la carpeta `docs`.
     * Su código debe crear la carpeta `docs` si no existe.
     """
-    data_path = Path("files") / "shipping-data.csv"
-    docs_path = Path("docs")
-    docs_path.mkdir(parents=True, exist_ok=True)
+    import matplotlib.pyplot as plt
+    import pandas as pd
+    import os
 
-    df = pd.read_csv(data_path)
-
-    plt.style.use("seaborn-v0_8-whitegrid")
-    colors_wh = ["#4C72B0", "#55A868", "#C44E52", "#8172B2", "#CCB974"]
-    colors_mode = ["#4C72B0", "#55A868", "#C44E52"]
-
-    # 1. Warehouse_block – bar chart
-    fig, ax = plt.subplots(figsize=(6, 4))
-    counts = df["Warehouse_block"].value_counts().sort_index()
-    bars = ax.bar(
-        counts.index, counts.values, color=colors_wh, edgecolor="black", linewidth=0.5
-    )
-    ax.set_title("Shipping per Warehouse Block", fontsize=14, fontweight="bold")
-    ax.set_xlabel("Warehouse Block")
-    ax.set_ylabel("Number of Shipments")
-    for bar, v in zip(bars, counts.values):
-        ax.text(
-            bar.get_x() + bar.get_width() / 2,
-            bar.get_height() + max(counts.values) * 0.01,
-            str(int(v)),
-            ha="center",
-            va="bottom",
-            fontsize=9,
+    def load_data():
+        df=pd.read_csv("files/input/shipping-data.csv")
+        return df
+    def create_visual_for_shipping_per_warehouse(df):
+        df = df.copy()
+        plt.figure()
+        counts=df["Warehouse_block"].value_counts()
+        counts.plot.bar(
+            title="Shipping per Warehouse",
+            xlabel="Warehouse Block", 
+            ylabel="Record Count",
+            color="tab:blue",
+            fontsize=8
         )
-    ax.set_ylim(0, counts.max() * 1.15)
-    fig.tight_layout()
-    fig.savefig(docs_path / "shipping_per_warehouse.png", dpi=120, bbox_inches="tight")
-    plt.close(fig)
 
-    # 2. Mode_of_Shipment – pie chart
-    fig, ax = plt.subplots(figsize=(6, 4))
-    mode_counts = df["Mode_of_Shipment"].value_counts()
-    _, _, autotexts = ax.pie(
-        mode_counts.values,
-        labels=mode_counts.index,
-        autopct="%1.1f%%",
-        startangle=90,
-        colors=colors_mode,
-        explode=(0.02,) * len(mode_counts),
-        textprops={"fontsize": 11},
-    )
-    for t in autotexts:
-        t.set_fontsize(10)
-        t.set_fontweight("bold")
-    ax.set_title("Mode of Shipment", fontsize=14, fontweight="bold")
-    fig.tight_layout()
-    fig.savefig(docs_path / "mode_of_shipment.png", dpi=120, bbox_inches="tight")
-    plt.close(fig)
+        plt.gca().spines["top"].set_visible(False)
+        plt.gca().spines["right"].set_visible(False)
+        plt.savefig("docs/shipping_per_warehouse.png")
 
-    # 3. Customer_rating – bar chart
-    fig, ax = plt.subplots(figsize=(6, 4))
-    rating_counts = df["Customer_rating"].value_counts().sort_index()
-    bars = ax.bar(
-        rating_counts.index.astype(str),
-        rating_counts.values,
-        color="#4C72B0",
-        edgecolor="black",
-        linewidth=0.5,
-    )
-    ax.set_title("Customer Rating Distribution", fontsize=14, fontweight="bold")
-    ax.set_xlabel("Customer Rating")
-    ax.set_ylabel("Count")
-    for bar, v in zip(bars, rating_counts.values):
-        ax.text(
-            bar.get_x() + bar.get_width() / 2,
-            bar.get_height() + max(rating_counts.values) * 0.01,
-            str(int(v)),
-            ha="center",
-            va="bottom",
-            fontsize=9,
+    def create_visual_for_mode_of_shipment(df):
+        df = df.copy()
+        plt.figure()
+        counts=df["Mode_of_Shipment"].value_counts()
+        counts.plot.pie(
+            title="Mode of shipment",   
+            wedgeprops=dict(width=0.35),
+            ylabel="",
+            color=["tab:blue","tab:orange","tab:green"]
         )
-    ax.set_ylim(0, rating_counts.max() * 1.15)
-    fig.tight_layout()
-    fig.savefig(docs_path / "customer_rating.png", dpi=120, bbox_inches="tight")
-    plt.close(fig)
 
-    # 4. Weight_in_gms – histogram
-    fig, ax = plt.subplots(figsize=(6, 4))
-    ax.hist(
-        df["Weight_in_gms"],
-        bins=40,
-        color="#55A868",
-        edgecolor="black",
-        linewidth=0.4,
-        alpha=0.85,
-    )
-    ax.set_title("Weight Distribution (grams)", fontsize=14, fontweight="bold")
-    ax.set_xlabel("Weight (gms)")
-    ax.set_ylabel("Frequency")
-    fig.tight_layout()
-    fig.savefig(docs_path / "weight_distribution.png", dpi=120, bbox_inches="tight")
-    plt.close(fig)
+        plt.savefig("docs/mode_of_shipment.png")
 
-    # HTML dashboard
-    html = """<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Shipping Dashboard</title>
-    <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        body {
-            font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
-            background: #f0f2f5;
-            color: #333;
-            padding: 20px;
-        }
-        header {
-            text-align: center;
-            margin-bottom: 30px;
-            padding: 20px;
-            background: linear-gradient(135deg, #1a237e, #283593);
-            color: white;
-            border-radius: 12px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-        }
-        header h1 { font-size: 2rem; margin-bottom: 6px; }
-        header p { opacity: 0.9; font-size: 1rem; }
-        .dashboard {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 24px;
-            max-width: 1200px;
-            margin: 0 auto;
-        }
-        .card {
-            background: white;
-            border-radius: 12px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.08);
-            padding: 16px;
-            transition: transform 0.2s, box-shadow 0.2s;
-        }
-        .card:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 6px 18px rgba(0,0,0,0.12);
-        }
-        .card img {
-            width: 100%;
-            height: auto;
-            display: block;
-            border-radius: 6px;
-        }
-        footer {
-            text-align: center;
-            margin-top: 40px;
-            color: #777;
-            font-size: 0.85rem;
-        }
-        @media (max-width: 768px) {
-            .dashboard { grid-template-columns: 1fr; }
-        }
-    </style>
-</head>
-<body>
-    <header>
-        <h1>Shipping Dashboard</h1>
-        <p>Static overview of warehouse blocks, shipment modes, customer ratings and package weights</p>
-    </header>
+    def create_visual_for_average_customer_rating(df):
+        df= df.copy()
+        plt.figure()              
+        df=(df[["Mode_of_Shipment","Customer_rating"]]
+            .groupby("Mode_of_Shipment")
+            .describe()
+        )
 
-    <div class="dashboard">
-        <div class="card">
-            <img src="shipping_per_warehouse.png" alt="Shipping per Warehouse Block">
-        </div>
-        <div class="card">
-            <img src="mode_of_shipment.png" alt="Mode of Shipment">
-        </div>
-        <div class="card">
-            <img src="customer_rating.png" alt="Customer Rating Distribution">
-        </div>
-        <div class="card">
-            <img src="weight_distribution.png" alt="Weight Distribution">
-        </div>
-    </div>
+        df.columns = df.columns.droplevel()
+        df = df[["mean","max","min"]]
+        #return df
+        
 
-    <footer>
-        Generated from files/shipping-data.csv &mdash; Matplotlib static dashboard
-    </footer>
-</body>
-</html>
-"""
-    (docs_path / "index.html").write_text(html, encoding="utf-8")
+        plt.barh(
+            y=df.index.values,
+            width=df["mean"].values - 1,
+            left = df["min"].values,
+            height=0.9,
+            color="lightgray",
+            alpha=0.8
+            )
+        colors = ["tab:green" if value >=3.0 
+                  else "tab:orange" for value in 
+                  df["mean"].values]
+
+        plt.barh(
+            y=df.index.values,
+            width=df["mean"].values - 1,
+            left = df["min"].values,
+            color=colors,
+            height=0.5,
+            alpha=1.0)
+        plt.title("Average Customer Rating")
+        plt.gca().spines["top"].set_visible(False)
+        plt.gca().spines["right"].set_visible(False)
+        plt.gca().spines["bottom"].set_visible(False)
+        plt.gca().spines["left"].set_visible(False)
+        plt.savefig("docs/average_customer_rating.png")
+
+    def create_visual_for_weight_distribution(df):
+        df = df.copy()
+        plt.figure()
+        df["Weight_in_gms"].plot.hist(
+         title="Shipped Weight Distribution",
+         color="tab:orange",
+         edgecolor="white",  
+        )
+        plt.gca().spines["top"].set_visible(False)
+        plt.gca().spines["right"].set_visible(False)
+        plt.savefig("docs/weight_distribution.png")
+    
+    df=load_data()
+
+    os.makedirs("docs",exist_ok=True)
+
+    create_visual_for_shipping_per_warehouse(df)
+    create_visual_for_mode_of_shipment(df)
+    create_visual_for_average_customer_rating(df)
+    create_visual_for_weight_distribution(df)
+
+    archivo = open("docs/index.html", "w")
+    contenido = """<DOCTYPE html>
+    <html>
+        <body>
+            <h1>Shipping Dashboard Example</h1>
+            <div style = "width:45%;float:left">
+                <img src="docs/shipping_per_warehouse.png.png" alt="Fig 1">
+                <img src="docs/mode_of_shipment.png" alt="Fig 2">
+            </div>
+            <div style="width:45%;float:left">
+                <img src="docs/average_customer_rating.png" alt="Fig 3">
+                <img src="docs/weight_distribution.png" alt="Fig 4">
+            </div>
+        </body>
+    </html>"""
+    archivo.write(contenido)
+    archivo.close()
+    
+    return df
+print(pregunta_01())
